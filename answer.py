@@ -1,33 +1,33 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 from groq import Groq
 from dotenv import load_dotenv
 import re
+import os
+from selenium.common.exceptions import NoSuchElementException
 
 load_dotenv()
 client = Groq()
 
-def ask_ai(question: str, options: list[str]) -> str:
+def ask_ai(question: str, options: list[str]) -> int:
     formatted = "\n".join(f"{i+1}. {o}" for i, o in enumerate(options))
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[{
             "role": "user",
-            "content": f"Question: {question}\nOptions:\n{formatted}\nReply with one of the options given, word for word"
+            "content": f"Question: {question}\nOptions:\n{formatted}\nReply with one of the options only numbering just number of that answer please"
         }]
     )
-    return response.choices[0].message.content.strip()
+    return int(response.choices[0].message.content.strip())
 
 
     
 print("Hello World")
-email_njabs = "moshifanjabulo@gmail.com"
-passwor_njabs = "UJ4$CH?628veh_y"
 
-email_kay = "Mahlarekarabo.702@gmail.com"
-pass_kay = "CS@xN6DcGMF_MZJ"
 
 web = webdriver.ChromeOptions()
 web.add_experimental_option("detach", True)
@@ -41,8 +41,9 @@ driver.implicitly_wait(30)
 e = driver.find_element(By.XPATH, '//*[@id=":r0:-form-item"]')
 p= driver.find_element(By.XPATH, '//*[@id=":r1:-form-item"]')
 
-e.send_keys(email_kay)
-p.send_keys(pass_kay)
+
+e.send_keys(os.getenv(key="email_kay"))
+p.send_keys(os.getenv(key="pass_kay"))
 
 login = driver.find_element(By.XPATH, '//*[@id="root"]/div/div[3]/div/div[5]/form/button')
 login.click()
@@ -54,43 +55,47 @@ continue_button.click()
 
 
 time.sleep(30)
-driver.switch_to.new_window('tab')
-counter = 153
+
+counter = 154
 
 
-# start_button = driver.find_element(By.XPATH, '//*[@id="curriculum_navigation_content"]/div[1]/div/div/div/div[3]/div[2]/div/button')
 
-# start_button.click()
-
-while True:
-    driver.get(f"https://savanna.alxafrica.com/evaluation_quizzes/{counter}")
-    counter +=1
+for i in range(counter, counter+10):
+    driver.switch_to.new_window('tab')
+    driver.get(f"https://savanna.alxafrica.com/evaluation_quizzes/{i}")
+    # driver.get("https://savanna.alxafrica.com/evaluation_quizzes/159")
+    try:
+        start_button = driver.find_element(By.XPATH, '//*[@id="curriculum_navigation_content"]/div[1]/div/div/div/div[3]/div[2]/div/button')
+        start_button.click()
+    except NoSuchElementException:
+        print("No such start button")
 
     while True:
-
-        element = driver.find_element(By.TAG_NAME, "h3")
-
-        if element.text.strip() == "Overview":
-            print("Found Overview")
-            break
-            # do something here
-        time.sleep(10)
+        try:
+            element = driver.find_element(By.TAG_NAME, "h3")
+            if element.text.strip() == "Overview":
+                print("Found Overview")
+                break
+        except NoSuchElementException:
+            print("No h3 tag found on this page")
+        time.sleep(3)
         print("Here")
         question = driver.find_element(By.XPATH, '//*[@id="curriculum_navigation_content"]/div[1]/div/div/div/div[3]/div/div/h2').text
 
         options = driver.find_elements(By.CSS_SELECTOR, '.hstack p')
         option_answers = [option.text for option in options]
         answer = ask_ai(question, option_answers)
-        clean_answer = re.sub(r'^\d+\.\s*', '', answer).strip()
-
+        # clean_answer = re.sub(r'^\d+\.\s*', '', answer).strip()
         print(answer)
-        answer_button = driver.find_element(By.CSS_SELECTOR, f'button[aria-label*="{clean_answer}"]')
+        print(option_answers[answer-1])
+        answer_button = WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, f'button[aria-label*="{option_answers[answer-1]}"]')))
+        # answer_button = driver.find_element(By.CSS_SELECTOR, f'button[aria-label*="{clean_answer}"]')
 
-
-        answer_button.click()
+        # answer_button.click()
+        driver.execute_script("arguments[0].click();", answer_button)
 
         submit_button = driver.find_element(By.XPATH, '//*[@id="curriculum_navigation_content"]/div[1]/div/div/div/div[3]/div/form/div[2]/div[2]/button')
-        submit_button.click()
+        driver.execute_script("arguments[0].click();", submit_button)
     
 
 
