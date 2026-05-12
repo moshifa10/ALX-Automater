@@ -10,8 +10,14 @@ import re
 import os
 from selenium.common.exceptions import NoSuchElementException
 
+
+
+
+
 load_dotenv()
 client = Groq()
+
+
 
 def ask_ai(question: str, options: list[str]) -> int:
     formatted = "\n".join(f"{i+1}. {o}" for i, o in enumerate(options))
@@ -22,12 +28,13 @@ def ask_ai(question: str, options: list[str]) -> int:
             "content": f"Question: {question}\nOptions:\n{formatted}\nReply with one of the options only numbering just number of that answer please"
         }]
     )
-    return int(response.choices[0].message.content.strip())
+
+    saved = response.choices[0].message.content.strip().strip(",").strip(".")
+    return int(saved)
 
 
     
 print("Hello World")
-
 
 web = webdriver.ChromeOptions()
 web.add_experimental_option("detach", True)
@@ -42,8 +49,8 @@ e = driver.find_element(By.XPATH, '//*[@id=":r0:-form-item"]')
 p= driver.find_element(By.XPATH, '//*[@id=":r1:-form-item"]')
 
 
-e.send_keys(os.getenv(key="email_kay"))
-p.send_keys(os.getenv(key="pass_kay"))
+e.send_keys(os.getenv(key="email"))
+p.send_keys(os.getenv(key="password"))
 
 login = driver.find_element(By.XPATH, '//*[@id="root"]/div/div[3]/div/div[5]/form/button')
 login.click()
@@ -59,8 +66,10 @@ time.sleep(30)
 counter = 154
 
 
+test = [155,156,159]
+test2 = [153]
 
-for i in range(counter, counter+10):
+for i in test:
     driver.switch_to.new_window('tab')
     driver.get(f"https://savanna.alxafrica.com/evaluation_quizzes/{i}")
     # driver.get("https://savanna.alxafrica.com/evaluation_quizzes/159")
@@ -96,6 +105,4 @@ for i in range(counter, counter+10):
 
         submit_button = driver.find_element(By.XPATH, '//*[@id="curriculum_navigation_content"]/div[1]/div/div/div/div[3]/div/form/div[2]/div[2]/button')
         driver.execute_script("arguments[0].click();", submit_button)
-    
-
 
